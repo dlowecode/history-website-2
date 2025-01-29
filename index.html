@@ -3,27 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vimeo Video Gallery</title>
+  <title>History of Orthopedics at HJD and NYU Langone</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Custom purple accent */
+    /* Custom pastel purple accent */
     .accent-purple {
-      color: rgb(88, 15, 139);
+      color: rgb(178, 132, 220); /* Pastel purple */
     }
     .bg-accent-purple {
-      background-color: rgb(88, 15, 139);
+      background-color: rgb(178, 132, 220); /* Pastel purple */
     }
     .border-accent-purple {
-      border-color: rgb(88, 15, 139);
+      border-color: rgb(178, 132, 220); /* Pastel purple */
     }
   </style>
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body class="bg-black text-gray-100">
   <!-- Video Player Banner -->
   <div class="w-full bg-black py-6">
     <div class="max-w-7xl mx-auto px-4 relative">
-      <!-- Player -->
-      <div id="player" class="aspect-video w-full bg-gray-800"></div>
+      <!-- Banner with Image, Title, and Button -->
+      <div id="banner" class="aspect-video w-full bg-black relative flex items-center justify-center">
+        <img id="banner-image" src="" alt="Banner Image" class="absolute inset-0 w-full h-full object-cover opacity-50">
+        <div class="relative text-center">
+          <h1 class="text-6xl font-black mb-8">History of Orthopedics at HJD and NYU Langone</h1>
+          <button id="start-watching" class="bg-accent-purple text-white px-8 py-4 rounded-lg font-bold hover:bg-purple-900 transition-colors">
+            Start Watching
+          </button>
+        </div>
+      </div>
+      <!-- Player (hidden by default) -->
+      <div id="player" class="aspect-video w-full bg-black hidden"></div>
       <!-- Navigation Arrows -->
       <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 p-3 rounded-full hover:bg-gray-700">
         ←
@@ -50,6 +60,9 @@
     ];
 
     const player = document.getElementById('player');
+    const banner = document.getElementById('banner');
+    const bannerImage = document.getElementById('banner-image');
+    const startWatchingButton = document.getElementById('start-watching');
     const videoGrid = document.getElementById('video-grid');
     let currentVideoIndex = 0;
 
@@ -66,19 +79,21 @@
       };
     }
 
-    // Render video grid
+    // Render video grid and set up banner
     async function renderVideoGrid() {
       const videos = await Promise.all(videoIds.map(fetchVideoDetails));
+      // Set banner image to the first video's thumbnail
+      bannerImage.src = videos[0].thumbnail;
+      // Render video grid
       videoGrid.innerHTML = videos.map((video, index) => `
         <div class="relative cursor-pointer group" onclick="loadVideo(${index})">
           <img src="${video.thumbnail}" alt="${video.title}" class="w-full h-48 object-cover rounded-lg">
-          <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <h3 class="text-lg font-semibold">${video.title}</h3>
             <p class="text-sm">${formatDuration(video.duration)}</p>
           </div>
         </div>
       `).join('');
-      loadVideo(0); // Load first video by default
     }
 
     // Load video into player
@@ -86,6 +101,9 @@
       currentVideoIndex = index;
       const video = videoIds[index];
       player.innerHTML = `<iframe src="https://player.vimeo.com/video/${video}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      // Hide banner and show player
+      banner.classList.add('hidden');
+      player.classList.remove('hidden');
       highlightActiveVideo(index);
     }
 
@@ -93,8 +111,9 @@
     function highlightActiveVideo(index) {
       const thumbnails = document.querySelectorAll('#video-grid > div');
       thumbnails.forEach((thumb, i) => {
-        thumb.classList.toggle('border-2', i === index);
+        thumb.classList.toggle('border-4', i === index); /* Thicker border */
         thumb.classList.toggle('border-accent-purple', i === index);
+        thumb.classList.toggle('rounded-lg', i === index); /* Match rounded corners */
       });
     }
 
@@ -114,6 +133,11 @@
     document.getElementById('next-btn').addEventListener('click', () => {
       currentVideoIndex = (currentVideoIndex + 1) % videoIds.length;
       loadVideo(currentVideoIndex);
+    });
+
+    // Start watching button
+    startWatchingButton.addEventListener('click', () => {
+      loadVideo(0); // Load the first video
     });
 
     // Initialize
