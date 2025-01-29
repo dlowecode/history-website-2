@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vimeo Video Gallery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom purple accent */
+    .accent-purple {
+      color: rgb(88, 15, 139);
+    }
+    .bg-accent-purple {
+      background-color: rgb(88, 15, 139);
+    }
+    .border-accent-purple {
+      border-color: rgb(88, 15, 139);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+  <!-- Video Player Banner -->
+  <div class="w-full bg-black py-6">
+    <div class="max-w-7xl mx-auto px-4 relative">
+      <!-- Player -->
+      <div id="player" class="aspect-video w-full bg-gray-800"></div>
+      <!-- Navigation Arrows -->
+      <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 p-3 rounded-full hover:bg-gray-700">
+        ←
+      </button>
+      <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800 p-3 rounded-full hover:bg-gray-700">
+        →
+      </button>
+    </div>
+  </div>
+
+  <!-- Video Grid -->
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </div>
+
+  <script>
+    const videoIds = [
+      1045001462, 1045001369, 1045001239, 1045001104, 1045000972, 1047633266,
+      1047635398, 1047636710, 1047637706, 1047638919, 1047646872, 1047651560,
+      1047653099, 1047654290, 1047654826, 1047655106, 1047655768, 1047656241,
+      1047657025, 1047657649, 1047658370, 1047658919, 1047660519, 1047661439,
+      1047662157, 1047662544, 1047663080, 1047663842, 1047665428, 1047666442,
+      1047666770, 1047667183, 1047667693, 1047668234
+    ];
+
+    const player = document.getElementById('player');
+    const videoGrid = document.getElementById('video-grid');
+    let currentVideoIndex = 0;
+
+    // Fetch video details from Vimeo's oEmbed API
+    async function fetchVideoDetails(videoId) {
+      const response = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}`);
+      const data = await response.json();
+      return {
+        id: videoId,
+        title: data.title,
+        duration: data.duration,
+        thumbnail: data.thumbnail_url,
+        embed: data.html
+      };
+    }
+
+    // Render video grid
+    async function renderVideoGrid() {
+      const videos = await Promise.all(videoIds.map(fetchVideoDetails));
+      videoGrid.innerHTML = videos.map((video, index) => `
+        <div class="relative cursor-pointer group" onclick="loadVideo(${index})">
+          <img src="${video.thumbnail}" alt="${video.title}" class="w-full h-48 object-cover rounded-lg">
+          <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+            <h3 class="text-lg font-semibold">${video.title}</h3>
+            <p class="text-sm">${formatDuration(video.duration)}</p>
+          </div>
+        </div>
+      `).join('');
+      loadVideo(0); // Load first video by default
+    }
+
+    // Load video into player
+    function loadVideo(index) {
+      currentVideoIndex = index;
+      const video = videoIds[index];
+      player.innerHTML = `<iframe src="https://player.vimeo.com/video/${video}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      highlightActiveVideo(index);
+    }
+
+    // Highlight active video in grid
+    function highlightActiveVideo(index) {
+      const thumbnails = document.querySelectorAll('#video-grid > div');
+      thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('border-2', i === index);
+        thumb.classList.toggle('border-accent-purple', i === index);
+      });
+    }
+
+    // Format duration (seconds to MM:SS)
+    function formatDuration(duration) {
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Navigation arrows
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      currentVideoIndex = (currentVideoIndex - 1 + videoIds.length) % videoIds.length;
+      loadVideo(currentVideoIndex);
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      currentVideoIndex = (currentVideoIndex + 1) % videoIds.length;
+      loadVideo(currentVideoIndex);
+    });
+
+    // Initialize
+    renderVideoGrid();
+  </script>
+</body>
+</html>
