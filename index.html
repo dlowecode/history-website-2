@@ -16,6 +16,16 @@
     .border-accent-purple {
       border-color: rgb(88, 15, 139); /* Original purple */
     }
+    /* Hide arrows by default */
+    #prev-btn, #next-btn {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    /* Show arrows on player hover */
+    #player:hover #prev-btn,
+    #player:hover #next-btn {
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-black text-gray-100">
@@ -33,14 +43,15 @@
         </div>
       </div>
       <!-- Player (hidden by default) -->
-      <div id="player" class="aspect-video w-full bg-black hidden"></div>
-      <!-- Navigation Arrows -->
-      <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 p-3 rounded-full hover:bg-gray-700">
-        ←
-      </button>
-      <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800 p-3 rounded-full hover:bg-gray-700">
-        →
-      </button>
+      <div id="player" class="aspect-video w-full bg-black hidden relative">
+        <!-- Navigation Arrows -->
+        <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-400 transition-colors">
+          ←
+        </button>
+        <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-400 transition-colors">
+          →
+        </button>
+      </div>
     </div>
   </div>
 
@@ -64,6 +75,8 @@
     const bannerImage = document.getElementById('banner-image');
     const startWatchingButton = document.getElementById('start-watching');
     const videoGrid = document.getElementById('video-grid');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
     let currentVideoIndex = 0;
 
     // Fetch video details from Vimeo's oEmbed API
@@ -82,8 +95,9 @@
     // Render video grid and set up banner
     async function renderVideoGrid() {
       const videos = await Promise.all(videoIds.map(fetchVideoDetails));
-      // Set banner image to the first video's thumbnail
-      bannerImage.src = videos[0].thumbnail;
+      // Set banner image to a random video's thumbnail
+      const randomIndex = Math.floor(Math.random() * videos.length);
+      bannerImage.src = videos[randomIndex].thumbnail;
       // Render video grid
       videoGrid.innerHTML = videos.map((video, index) => `
         <div class="relative cursor-pointer group" onclick="loadVideo(${index})">
@@ -105,6 +119,25 @@
       banner.classList.add('hidden');
       player.classList.remove('hidden');
       highlightActiveVideo(index);
+      // Add event listener for autoplay next video
+      const iframe = player.querySelector('iframe');
+      iframe.onload = () => {
+        iframe.contentWindow.postMessage('{"method":"addEventListener","event":"ended"}', '*');
+        window.addEventListener('message', handleVideoEnd);
+      };
+    }
+
+    // Handle video end event
+    function handleVideoEnd(event) {
+      if (event.data.event === 'ended') {
+        playNextVideo();
+      }
+    }
+
+    // Play the next video
+    function playNextVideo() {
+      currentVideoIndex = (currentVideoIndex + 1) % videoIds.length;
+      loadVideo(currentVideoIndex);
     }
 
     // Highlight active video in grid
@@ -125,12 +158,12 @@
     }
 
     // Navigation arrows
-    document.getElementById('prev-btn').addEventListener('click', () => {
+    prevBtn.addEventListener('click', () => {
       currentVideoIndex = (currentVideoIndex - 1 + videoIds.length) % videoIds.length;
       loadVideo(currentVideoIndex);
     });
 
-    document.getElementById('next-btn').addEventListener('click', () => {
+    nextBtn.addEventListener('click', () => {
       currentVideoIndex = (currentVideoIndex + 1) % videoIds.length;
       loadVideo(currentVideoIndex);
     });
