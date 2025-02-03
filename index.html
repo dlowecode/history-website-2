@@ -16,16 +16,6 @@
     .border-accent-purple {
       border-color: rgb(88, 15, 139); /* Original purple */
     }
-    /* Hide arrows by default */
-    #prev-btn, #next-btn {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    /* Show arrows on player hover */
-    #player:hover #prev-btn,
-    #player:hover #next-btn {
-      opacity: 1;
-    }
   </style>
 </head>
 <body class="bg-black text-gray-100">
@@ -43,15 +33,7 @@
         </div>
       </div>
       <!-- Player (hidden by default) -->
-      <div id="player" class="aspect-video w-full bg-black hidden relative">
-        <!-- Navigation Arrows -->
-        <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-400 transition-colors">
-          ←
-        </button>
-        <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-400 transition-colors">
-          →
-        </button>
-      </div>
+      <div id="player" class="aspect-video w-full bg-black hidden"></div>
     </div>
   </div>
 
@@ -75,8 +57,6 @@
     const bannerImage = document.getElementById('banner-image');
     const startWatchingButton = document.getElementById('start-watching');
     const videoGrid = document.getElementById('video-grid');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
     let currentVideoIndex = 0;
 
     // Fetch video details from Vimeo's oEmbed API
@@ -156,17 +136,6 @@
       const seconds = duration % 60;
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-
-    // Navigation arrows
-    prevBtn.addEventListener('click', () => {
-      currentVideoIndex = (currentVideoIndex - 1 + videoIds.length) % videoIds.length;
-      loadVideo(currentVideoIndex);
-    });
-
-    nextBtn.addEventListener('click', () => {
-      currentVideoIndex = (currentVideoIndex + 1) % videoIds.length;
-      loadVideo(currentVideoIndex);
-    });
 
     // Start watching button
     startWatchingButton.addEventListener('click', () => {
